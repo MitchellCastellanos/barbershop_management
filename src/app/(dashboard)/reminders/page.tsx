@@ -114,22 +114,13 @@ export default async function RemindersPage({ searchParams }: PageProps) {
                 </div>
 
                 <p className="text-sm text-slate-600">
-                  {reminder.vehicle.client.firstName} {reminder.vehicle.client.lastName} —{" "}
-                  {reminder.vehicle.year} {reminder.vehicle.make} {reminder.vehicle.model}
-                </p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Placa: {reminder.vehicle.licensePlate}
+                  {reminder.client.firstName} {reminder.client.lastName}
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-2">
                   {reminder.dueDate && (
                     <span className="text-xs text-slate-500">
                       📅 Vence: {formatDate(reminder.dueDate)}
-                    </span>
-                  )}
-                  {reminder.dueMileage && (
-                    <span className="text-xs text-slate-500">
-                      🛞 Km límite: {reminder.dueMileage.toLocaleString()} {reminder.vehicle.mileageUnit}
                     </span>
                   )}
                   {reminder.sentAt && (

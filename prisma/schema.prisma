@@ -1,4 +1,4 @@
-// Prisma Schema — Mecanico Management
+// Prisma Schema — Barbershop Management
 // Documentación: https://pris.ly/d/prisma-schema
 
 // Prisma v7: motor WASM, conexión via @prisma/adapter-pg (ver src/lib/db.ts)
@@ -25,15 +25,17 @@ model Shop {
   currency  String   @default("CAD")
   createdAt DateTime @default(now())
 
-  users     User[]
-  clients   Client[]
-  invoices  Invoice[]
-  reminders ServiceReminder[]
-  documents AccountingDocument[]
+  users        User[]
+  clients      Client[]
+  invoices     Invoice[]
+  reminders    ServiceReminder[]
+  documents    AccountingDocument[]
+  services     Service[]
+  appointments Appointment[]
 }
 
 // ─────────────────────────────────────────
-// USER — Mechanic shop staff
+// USER — Barbershop staff
 // ─────────────────────────────────────────
 model User {
   id           String   @id @default(cuid())
@@ -42,17 +44,18 @@ model User {
   name         String
   email        String   @unique
   passwordHash String?
-  role         Role     @default(MECHANIC)
+  role         Role     @default(BARBER)
   createdAt    DateTime @default(now())
 
   // NextAuth required
-  accounts Account[]
-  sessions Session[]
+  accounts     Account[]
+  sessions     Session[]
+  appointments Appointment[]
 }
 
 enum Role {
   OWNER
-  MECHANIC
+  BARBER
   VIEWER
 }
 
@@ -108,64 +111,89 @@ model Client {
   phone     String?
   address   String?
   notes     String?  @db.Text
+  hairNotes String?  @db.Text  // preferred style, usual length, etc.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  vehicles Vehicle[]
-  invoices Invoice[]
+  appointments  Appointment[]
+  invoices      Invoice[]
+  reminders     ServiceReminder[]
 }
 
 // ─────────────────────────────────────────
-// VEHICLE
+// SERVICE — Catalog of barbershop services
 // ─────────────────────────────────────────
-model Vehicle {
-  id           String      @id @default(cuid())
-  clientId     String
-  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  make         String
-  model        String
-  year         Int
-  licensePlate String
-  vin          String?
-  color        String?
-  mileageUnit  MileageUnit @default(KM)
-  createdAt    DateTime    @default(now())
+model Service {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id])
+  name            String   // "Corte clásico", "Fade", "Barba", etc.
+  description     String?
+  durationMinutes Int      @default(30)
+  price           Decimal  @db.Decimal(10, 2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 
-  invoices  Invoice[]
-  reminders ServiceReminder[]
+  appointments Appointment[]
 }
 
-enum MileageUnit {
-  KM
-  MILES
+// ─────────────────────────────────────────
+// APPOINTMENT
+// ─────────────────────────────────────────
+model Appointment {
+  id              String            @id @default(cuid())
+  shopId          String
+  shop            Shop              @relation(fields: [shopId], references: [id])
+  clientId        String
+  client          Client            @relation(fields: [clientId], references: [id])
+  barberId        String?
+  barber          User?             @relation(fields: [barberId], references: [id])
+  serviceId       String?
+  service         Service?          @relation(fields: [serviceId], references: [id])
+  date            DateTime
+  durationMinutes Int               @default(30)
+  status          AppointmentStatus @default(PENDING)
+  notes           String?           @db.Text
+  tip             Decimal?          @db.Decimal(10, 2)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  invoice  Invoice?
+  reminder ServiceReminder?
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
 // ─────────────────────────────────────────
 // INVOICE
 // ─────────────────────────────────────────
 model Invoice {
-  id            String        @id @default(cuid())
-  shopId        String
-  shop          Shop          @relation(fields: [shopId], references: [id])
-  clientId      String
-  client        Client        @relation(fields: [clientId], references: [id])
-  vehicleId     String
-  vehicle       Vehicle       @relation(fields: [vehicleId], references: [id])
-  invoiceNumber String        // e.g. "INV-0042" — unique per shop
-  status        InvoiceStatus @default(DRAFT)
-  issuedAt      DateTime      @default(now())
-  dueAt         DateTime?
-  paidAt        DateTime?
-  subtotal      Decimal       @db.Decimal(10, 2)
-  taxRate       Decimal       @db.Decimal(5, 4) // 0.14975 = TPS+TVQ Quebec
-  taxAmount     Decimal       @db.Decimal(10, 2)
-  total         Decimal       @db.Decimal(10, 2)
-  notes         String?       @db.Text
-  pdfUrl        String?       // Supabase Storage URL
-  mileageIn     Int?
-  mileageOut    Int?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  shopId          String
+  shop            Shop          @relation(fields: [shopId], references: [id])
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id])
+  appointmentId   String?       @unique
+  appointment     Appointment?  @relation(fields: [appointmentId], references: [id])
+  invoiceNumber   String        // e.g. "INV-0042" — unique per shop
+  status          InvoiceStatus @default(DRAFT)
+  issuedAt        DateTime      @default(now())
+  dueAt           DateTime?
+  paidAt          DateTime?
+  subtotal        Decimal       @db.Decimal(10, 2)
+  taxRate         Decimal       @db.Decimal(5, 4) // 0.14975 = TPS+TVQ Quebec
+  taxAmount       Decimal       @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  notes           String?       @db.Text
+  pdfUrl          String?       // Supabase Storage URL
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   lineItems InvoiceLineItem[]
 
@@ -188,13 +216,13 @@ model InvoiceLineItem {
   quantity    Decimal      @db.Decimal(8, 2)
   unitPrice   Decimal      @db.Decimal(10, 2)
   lineTotal   Decimal      @db.Decimal(10, 2)
-  itemType    LineItemType @default(LABOUR)
+  itemType    LineItemType @default(CORTE)
   sortOrder   Int          @default(0)
 }
 
 enum LineItemType {
-  LABOUR
-  PART
+  CORTE
+  PRODUCTO
   OTHER
 }
 
@@ -202,18 +230,19 @@ enum LineItemType {
 // SERVICE REMINDER
 // ─────────────────────────────────────────
 model ServiceReminder {
-  id          String         @id @default(cuid())
-  shopId      String
-  shop        Shop           @relation(fields: [shopId], references: [id])
-  vehicleId   String
-  vehicle     Vehicle        @relation(fields: [vehicleId], references: [id])
-  serviceType String         // "Cambio de aceite", "Frenos", etc.
-  dueMileage  Int?
-  dueDate     DateTime?
-  notes       String?
-  status      ReminderStatus @default(PENDING)
-  sentAt      DateTime?
-  createdAt   DateTime       @default(now())
+  id             String         @id @default(cuid())
+  shopId         String
+  shop           Shop           @relation(fields: [shopId], references: [id])
+  clientId       String
+  client         Client         @relation(fields: [clientId], references: [id])
+  appointmentId  String?        @unique
+  appointment    Appointment?   @relation(fields: [appointmentId], references: [id])
+  serviceType    String         // "Corte", "Barba", etc.
+  dueDate        DateTime?
+  notes          String?
+  status         ReminderStatus @default(PENDING)
+  sentAt         DateTime?
+  createdAt      DateTime       @default(now())
 }
 
 enum ReminderStatus {

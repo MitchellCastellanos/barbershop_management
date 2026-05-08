@@ -24,9 +24,8 @@ export async function getReminders(status?: string) {
       ...(status && status !== "ALL" ? { status: status as never } : {}),
     },
     include: {
-      vehicle: {
-        include: { client: true },
-      },
+      client: true,
+      appointment: { include: { service: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -42,15 +41,14 @@ export async function createReminder(formData: ReminderFormData) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { vehicleId, serviceType, dueDate, dueMileage, notes } = parsed.data;
+  const { clientId, serviceType, dueDate, notes } = parsed.data;
 
   await db.serviceReminder.create({
     data: {
       shopId,
-      vehicleId,
+      clientId,
       serviceType,
       dueDate: dueDate ? new Date(dueDate) : null,
-      dueMileage: dueMileage ?? null,
       notes: notes || null,
       status: "PENDING",
     },
@@ -68,7 +66,7 @@ export async function sendReminderNow(reminderId: string) {
   const reminder = await db.serviceReminder.findFirst({
     where: { id: reminderId, shopId },
     include: {
-      vehicle: { include: { client: true } },
+      client: true,
       shop: true,
     },
   });
@@ -78,18 +76,14 @@ export async function sendReminderNow(reminderId: string) {
   // No reenviar si ya fue enviado
   if (reminder.sentAt) return { error: "Este recordatorio ya fue enviado" };
 
-  const client = reminder.vehicle.client;
+  const client = reminder.client;
   if (!client.email) return { error: "El cliente no tiene email registrado" };
 
   await sendReminderEmail({
     clientName: `${client.firstName} ${client.lastName}`,
     clientEmail: client.email,
-    vehicleDescription: `${reminder.vehicle.year} ${reminder.vehicle.make} ${reminder.vehicle.model}`,
-    licensePlate: reminder.vehicle.licensePlate,
     serviceType: reminder.serviceType,
     dueDate: reminder.dueDate,
-    dueMileage: reminder.dueMileage,
-    mileageUnit: reminder.vehicle.mileageUnit,
     shopName: reminder.shop.name,
     shopPhone: reminder.shop.phone,
     shopEmail: reminder.shop.email,
@@ -115,13 +109,12 @@ export async function dismissReminder(reminderId: string) {
   revalidatePath("/reminders");
 }
 
-// ── Para formulario: vehículos con sus clientes ─────────────
+// ── Para formulario: clientes ─────────────
 
 export async function getReminderFormData() {
   const shopId = await getShopId();
-  return db.vehicle.findMany({
-    where: { client: { shopId } },
-    include: { client: true },
-    orderBy: [{ client: { lastName: "asc" } }, { make: "asc" }],
+  return db.client.findMany({
+    where: { shopId },
+    orderBy: { lastName: "asc" },
   });
 }

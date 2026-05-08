@@ -5,7 +5,7 @@ import { getInvoiceFormData } from "@/actions/invoices";
 import { type InvoiceFormData } from "@/lib/validations";
 
 export default async function NewInvoicePage() {
-  const { clients } = await getInvoiceFormData();
+  const { clients, appointments } = await getInvoiceFormData();
 
   if (clients.length === 0) {
     redirect("/clients/new?hint=invoice");
@@ -22,6 +22,7 @@ export default async function NewInvoicePage() {
 
       <InvoiceForm
         clients={clients}
+        appointments={appointments}
         onSubmit={async (data: InvoiceFormData) => {
           "use server";
           return createInvoice(data);

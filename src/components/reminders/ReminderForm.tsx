@@ -5,33 +5,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
 import { reminderSchema, type ReminderFormData } from "@/lib/validations";
 
-interface Vehicle {
+interface Client {
   id: string;
-  make: string;
-  model: string;
-  year: number;
-  licensePlate: string;
-  client: { firstName: string; lastName: string };
+  firstName: string;
+  lastName: string;
 }
 
 interface ReminderFormProps {
-  vehicles: Vehicle[];
+  clients: Client[];
   onSubmit: (data: ReminderFormData) => Promise<{ error?: Record<string, string[]> } | void>;
 }
 
 const SERVICE_TYPES = [
-  "Cambio de aceite",
-  "Cambio de frenos",
-  "Alineación y balanceo",
-  "Revisión general",
-  "Cambio de llantas",
-  "Revisión de batería",
-  "Cambio de filtros",
-  "Revisión de transmisión",
+  "Corte",
+  "Barba",
+  "Corte + Barba",
+  "Afeitado clásico",
+  "Arreglo de cejas",
+  "Tratamiento capilar",
   "Otro",
 ];
 
-export function ReminderForm({ vehicles, onSubmit }: ReminderFormProps) {
+export function ReminderForm({ clients, onSubmit }: ReminderFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -42,10 +37,9 @@ export function ReminderForm({ vehicles, onSubmit }: ReminderFormProps) {
   } = useForm<ReminderFormData>({
     resolver: zodResolver(reminderSchema),
     defaultValues: {
-      vehicleId: "",
+      clientId: "",
       serviceType: "",
       dueDate: "",
-      dueMileage: undefined,
       notes: "",
     },
   });
@@ -64,26 +58,26 @@ export function ReminderForm({ vehicles, onSubmit }: ReminderFormProps) {
   return (
     <form onSubmit={handleSubmit(onValid)} className="space-y-6 max-w-2xl">
 
-      {/* Vehículo */}
+      {/* Cliente */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-        <h2 className="font-semibold text-slate-900">Vehículo</h2>
+        <h2 className="font-semibold text-slate-900">Cliente</h2>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Seleccionar vehículo *
+            Seleccionar cliente *
           </label>
           <select
-            {...register("vehicleId")}
-            className={selectClass(!!errors.vehicleId)}
+            {...register("clientId")}
+            className={selectClass(!!errors.clientId)}
           >
-            <option value="">Seleccionar vehículo...</option>
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.client.lastName}, {v.client.firstName} — {v.year} {v.make} {v.model} ({v.licensePlate})
+            <option value="">Seleccionar cliente...</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.lastName}, {c.firstName}
               </option>
             ))}
           </select>
-          {errors.vehicleId && (
-            <p className="text-red-600 text-xs mt-1">{errors.vehicleId.message}</p>
+          {errors.clientId && (
+            <p className="text-red-600 text-xs mt-1">{errors.clientId.message}</p>
           )}
         </div>
       </div>
@@ -109,37 +103,23 @@ export function ReminderForm({ vehicles, onSubmit }: ReminderFormProps) {
             <p className="text-red-600 text-xs mt-1">{errors.serviceType.message}</p>
           )}
           <p className="text-xs text-slate-400 mt-1">
-            También puedes escribir uno personalizado
+            Corte, Barba, Corte+Barba, etc.
           </p>
         </div>
 
-        {/* Inputs de vencimiento */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Fecha límite
-            </label>
-            <input
-              {...register("dueDate")}
-              type="date"
-              className={inputClass(false)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Kilometraje límite
-            </label>
-            <input
-              {...register("dueMileage", { valueAsNumber: true })}
-              type="number"
-              min={0}
-              placeholder="ej: 80,000"
-              className={inputClass(false)}
-            />
-          </div>
+        {/* Fecha de vencimiento */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            Fecha límite
+          </label>
+          <input
+            {...register("dueDate")}
+            type="date"
+            className={inputClass(false)}
+          />
         </div>
         <p className="text-xs text-slate-400">
-          Puedes definir fecha, kilometraje, o ambos. El cron nocturno envía el email cuando la fecha límite esté a ≤7 días.
+          El cron nocturno envía el email cuando la fecha límite esté a ≤7 días.
         </p>
       </div>
 

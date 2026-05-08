@@ -35,8 +35,6 @@ interface InvoiceData {
   status: string;
   issuedAt: Date;
   dueAt?: Date | null;
-  mileageIn?: number | null;
-  mileageOut?: number | null;
   subtotal: string | number;
   taxRate: string | number;
   taxAmount: string | number;
@@ -50,13 +48,11 @@ interface InvoiceData {
     phone?: string | null;
     address?: string | null;
   };
-  vehicle: {
-    make: string;
-    model: string;
-    year: number;
-    licensePlate: string;
-    mileageUnit: string;
-  };
+  appointment?: {
+    date: Date | string;
+    service?: { name: string } | null;
+    barber?: { name: string } | null;
+  } | null;
   shop: {
     name: string;
     address?: string | null;
@@ -137,10 +133,6 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 8, fontFamily: "Helvetica-Bold" },
   footer: { position: "absolute", bottom: 30, left: 48, right: 48 },
   footerText: { fontSize: 8, color: SLATE_400, textAlign: "center" },
-  mileageRow: { flexDirection: "row", gap: 16, marginTop: 6 },
-  mileagePill: { flexDirection: "row", gap: 4 },
-  mileageLabel: { fontSize: 8, color: SLATE_400 },
-  mileageValue: { fontSize: 8, color: SLATE_600 },
 });
 
 // Helpers de formato (sin Intl — no disponible en todos los entornos de PDF)
@@ -161,8 +153,8 @@ function fmtQty(val: string | number): string {
 }
 
 const itemTypeLabel: Record<string, string> = {
-  LABOUR: "Mano de obra",
-  PART: "Repuesto",
+  CORTE: "Servicio/Corte",
+  PRODUCTO: "Producto",
   OTHER: "Otro",
 };
 
@@ -233,7 +225,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceData }) {
 
         <View style={styles.divider} />
 
-        {/* ── Facturar a / Vehículo ── */}
+        {/* ── Facturar a / Cita ── */}
         <View style={styles.infoRow}>
           {/* Cliente */}
           <View style={styles.infoBlock}>
@@ -248,37 +240,25 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceData }) {
             </Text>
           </View>
 
-          {/* Vehículo */}
-          <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>Vehículo</Text>
-            <Text style={styles.infoValueBold}>
-              {invoice.vehicle.year} {invoice.vehicle.make} {invoice.vehicle.model}
-            </Text>
-            <Text style={styles.infoValue}>
-              Placa: {invoice.vehicle.licensePlate}
-            </Text>
-            {/* Km entrada / salida */}
-            {(invoice.mileageIn || invoice.mileageOut) && (
-              <View style={styles.mileageRow}>
-                {invoice.mileageIn && (
-                  <View style={styles.mileagePill}>
-                    <Text style={styles.mileageLabel}>Entrada:</Text>
-                    <Text style={styles.mileageValue}>
-                      {invoice.mileageIn.toLocaleString()} {invoice.vehicle.mileageUnit}
-                    </Text>
-                  </View>
-                )}
-                {invoice.mileageOut && (
-                  <View style={styles.mileagePill}>
-                    <Text style={styles.mileageLabel}>Salida:</Text>
-                    <Text style={styles.mileageValue}>
-                      {invoice.mileageOut.toLocaleString()} {invoice.vehicle.mileageUnit}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
+          {/* Cita (opcional) */}
+          {invoice.appointment && (
+            <View style={styles.infoBlock}>
+              <Text style={styles.infoLabel}>Cita</Text>
+              {invoice.appointment.service && (
+                <Text style={styles.infoValueBold}>
+                  {invoice.appointment.service.name}
+                </Text>
+              )}
+              <Text style={styles.infoValue}>
+                {fmtDate(invoice.appointment.date)}
+              </Text>
+              {invoice.appointment.barber && (
+                <Text style={styles.infoValue}>
+                  Barbero: {invoice.appointment.barber.name}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
         {/* ── Tabla de líneas ── */}

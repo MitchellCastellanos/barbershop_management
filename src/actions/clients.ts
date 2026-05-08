@@ -37,7 +37,7 @@ export async function getClients(search?: string) {
         : {}),
     },
     include: {
-      _count: { select: { vehicles: true, invoices: true } },
+      _count: { select: { appointments: true, invoices: true } },
     },
     orderBy: { lastName: "asc" },
   });
@@ -49,13 +49,16 @@ export async function getClientById(id: string) {
   const client = await db.client.findFirst({
     where: { id, shopId }, // siempre scoped al shop — seguridad multi-tenant
     include: {
-      vehicles: { orderBy: { createdAt: "desc" } },
+      appointments: {
+        orderBy: { date: "desc" },
+        take: 5,
+        include: { barber: true, service: true },
+      },
       invoices: {
         orderBy: { createdAt: "desc" },
         take: 5,
-        include: { vehicle: true },
       },
-      _count: { select: { vehicles: true, invoices: true } },
+      _count: { select: { appointments: true, invoices: true } },
     },
   });
 
@@ -73,7 +76,7 @@ export async function createClient(formData: ClientFormData) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { firstName, lastName, email, phone, address, notes } = parsed.data;
+  const { firstName, lastName, email, phone, address, notes, hairNotes } = parsed.data;
 
   const client = await db.client.create({
     data: {
@@ -84,6 +87,7 @@ export async function createClient(formData: ClientFormData) {
       phone: phone || null,
       address: address || null,
       notes: notes || null,
+      hairNotes: hairNotes || null,
     },
   });
 
@@ -103,7 +107,7 @@ export async function updateClient(id: string, formData: ClientFormData) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { firstName, lastName, email, phone, address, notes } = parsed.data;
+  const { firstName, lastName, email, phone, address, notes, hairNotes } = parsed.data;
 
   // Verificar que el cliente pertenece a este shop antes de actualizar
   await db.client.updateMany({
@@ -115,6 +119,7 @@ export async function updateClient(id: string, formData: ClientFormData) {
       phone: phone || null,
       address: address || null,
       notes: notes || null,
+      hairNotes: hairNotes || null,
     },
   });
 

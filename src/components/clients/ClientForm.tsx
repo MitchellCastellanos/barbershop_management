@@ -42,6 +42,7 @@ export function ClientForm({
       phone: "",
       address: "",
       notes: "",
+      hairNotes: "",
     },
   });
 
@@ -118,6 +119,17 @@ export function ClientForm({
           rows={3}
           placeholder="Observaciones sobre el cliente (solo visibles en el sistema)..."
           className={inputClass(!!errors.notes)}
+        />
+      </Field>
+
+      {/* Perfil de cabello */}
+      <Field label="Perfil de cabello" error={errors.hairNotes?.message}>
+        <textarea
+          {...register("hairNotes")}
+          rows={3}
+          placeholder="Estilo preferido, largo habitual, notas del corte..."
+          maxLength={1000}
+          className={inputClass(!!errors.hairNotes)}
         />
       </Field>
 

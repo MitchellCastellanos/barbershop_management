@@ -5,9 +5,9 @@ import { type ReminderFormData } from "@/lib/validations";
 import { redirect } from "next/navigation";
 
 export default async function NewReminderPage() {
-  const vehicles = await getReminderFormData();
+  const clients = await getReminderFormData();
 
-  if (vehicles.length === 0) {
+  if (clients.length === 0) {
     redirect("/clients/new?hint=reminder");
   }
 
@@ -21,7 +21,7 @@ export default async function NewReminderPage() {
       </div>
 
       <ReminderForm
-        vehicles={vehicles}
+        clients={clients}
         onSubmit={async (data: ReminderFormData) => {
           "use server";
           return createReminder(data);

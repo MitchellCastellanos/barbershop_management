@@ -21,8 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const ITEM_TYPE_LABEL: Record<string, string> = {
-  LABOUR: "Mano de obra",
-  PART: "Repuesto",
+  CORTE: "Servicio/Corte",
+  PRODUCTO: "Producto",
   OTHER: "Otro",
 };
 
@@ -81,7 +81,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Client + Vehicle info */}
+      {/* Client + Appointment info */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Client */}
         <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -102,38 +102,33 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* Vehicle */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-            Vehículo
-          </p>
-          <p className="font-semibold text-slate-900">
-            {invoice.vehicle.year} {invoice.vehicle.make} {invoice.vehicle.model}
-          </p>
-          <p className="text-sm text-slate-600 mt-1">
-            Placa: {invoice.vehicle.licensePlate}
-          </p>
-          {(invoice.mileageIn || invoice.mileageOut) && (
-            <div className="flex gap-4 mt-2">
-              {invoice.mileageIn && (
-                <p className="text-xs text-slate-500">
-                  Entrada: {invoice.mileageIn.toLocaleString()} {invoice.vehicle.mileageUnit}
-                </p>
-              )}
-              {invoice.mileageOut && (
-                <p className="text-xs text-slate-500">
-                  Salida: {invoice.mileageOut.toLocaleString()} {invoice.vehicle.mileageUnit}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Appointment (optional) */}
+        {invoice.appointment && (
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+              Cita
+            </p>
+            {invoice.appointment.service && (
+              <p className="font-semibold text-slate-900">
+                {invoice.appointment.service.name}
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mt-1">
+              {formatDate(invoice.appointment.date)}
+            </p>
+            {invoice.appointment.barber && (
+              <p className="text-sm text-slate-500 mt-1">
+                Barbero: {invoice.appointment.barber.name}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Line items */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Servicios y repuestos</h2>
+          <h2 className="font-semibold text-slate-900">Servicios y productos</h2>
         </div>
 
         {/* Table header */}

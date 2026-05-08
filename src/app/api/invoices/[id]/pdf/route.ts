@@ -27,7 +27,7 @@ export async function GET(
     where: { id, shopId },
     include: {
       client: true,
-      vehicle: true,
+      appointment: { include: { service: true, barber: true } },
       lineItems: { orderBy: { sortOrder: "asc" } },
       shop: true,
     },
@@ -39,16 +39,34 @@ export async function GET(
 
   // Serializar campos Decimal de Prisma a string antes de pasarlos al PDF
   const invoiceData = {
-    ...invoice,
+    invoiceNumber: invoice.invoiceNumber,
+    status: invoice.status,
+    issuedAt: invoice.issuedAt,
+    dueAt: invoice.dueAt,
+    notes: invoice.notes,
     subtotal: invoice.subtotal.toString(),
     taxRate: invoice.taxRate.toString(),
     taxAmount: invoice.taxAmount.toString(),
     total: invoice.total.toString(),
+    client: invoice.client,
+    appointment: invoice.appointment
+      ? {
+          date: invoice.appointment.date,
+          service: invoice.appointment.service
+            ? { name: invoice.appointment.service.name }
+            : null,
+          barber: invoice.appointment.barber
+            ? { name: invoice.appointment.barber.name }
+            : null,
+        }
+      : null,
+    shop: invoice.shop,
     lineItems: invoice.lineItems.map((item) => ({
-      ...item,
+      description: item.description,
       quantity: item.quantity.toString(),
       unitPrice: item.unitPrice.toString(),
       lineTotal: item.lineTotal.toString(),
+      itemType: item.itemType,
     })),
   };
 

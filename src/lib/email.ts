@@ -19,12 +19,8 @@ function getResend() {
 interface ReminderEmailData {
   clientName: string;
   clientEmail: string;
-  vehicleDescription: string; // "2019 Honda Civic"
-  licensePlate: string;
   serviceType: string;
   dueDate?: Date | null;
-  dueMileage?: number | null;
-  mileageUnit: string;
   shopName: string;
   shopPhone?: string | null;
   shopEmail?: string | null;
@@ -34,9 +30,9 @@ export async function sendReminderEmail(data: ReminderEmailData) {
   const element = React.createElement(ServiceReminderEmail, data);
 
   const { error } = await getResend().emails.send({
-    from: process.env.EMAIL_FROM ?? "Mecanico <noreply@mecanico.app>",
+    from: process.env.EMAIL_FROM ?? "Barbería <noreply@barberia.app>",
     to: data.clientEmail,
-    subject: `Recordatorio de servicio: ${data.serviceType} — ${data.vehicleDescription}`,
+    subject: `Te esperamos para tu próximo corte en ${data.shopName}`,
     react: element,
   });
 
@@ -62,7 +58,7 @@ export async function sendAccountantEmail(data: AccountingEmailData) {
   const fileCount = data.files.length;
 
   const { error } = await getResend().emails.send({
-    from: process.env.EMAIL_FROM ?? "Mecanico <noreply@mecanico.app>",
+    from: process.env.EMAIL_FROM ?? "Barbería <noreply@barberia.app>",
     to,
     subject: `${data.shopName} — ${fileCount} documento${fileCount !== 1 ? "s" : ""} nuevo${fileCount !== 1 ? "s" : ""}`,
     react: element,

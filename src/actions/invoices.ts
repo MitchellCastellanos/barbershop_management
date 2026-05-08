@@ -34,7 +34,7 @@ export async function getInvoices(status?: string) {
     },
     include: {
       client: true,
-      vehicle: true,
+      appointment: { include: { service: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -47,7 +47,7 @@ export async function getInvoiceById(id: string) {
     where: { id, shopId },
     include: {
       client: true,
-      vehicle: true,
+      appointment: { include: { service: true, barber: true } },
       lineItems: { orderBy: { sortOrder: "asc" } },
       shop: true,
     },
@@ -67,7 +67,7 @@ export async function createInvoice(formData: InvoiceFormData) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { clientId, vehicleId, lineItems, taxRate, notes, mileageIn, mileageOut, dueAt } =
+  const { clientId, appointmentId, lineItems, taxRate, notes, dueAt } =
     parsed.data;
 
   // Calcular totales con Decimal para evitar errores de punto flotante.
@@ -90,7 +90,7 @@ export async function createInvoice(formData: InvoiceFormData) {
       data: {
         shopId,
         clientId,
-        vehicleId,
+        appointmentId: appointmentId || null,
         invoiceNumber,
         status: "DRAFT",
         subtotal: subtotal.toFixed(2),
@@ -98,8 +98,6 @@ export async function createInvoice(formData: InvoiceFormData) {
         taxAmount: taxAmount.toFixed(2),
         total: total.toFixed(2),
         notes: notes || null,
-        mileageIn: mileageIn ?? null,
-        mileageOut: mileageOut ?? null,
         dueAt: dueAt ? new Date(dueAt) : null,
         lineItems: {
           create: lineItems.map((item, index) => ({
@@ -169,14 +167,16 @@ export async function savePdfUrl(id: string, pdfUrl: string) {
 export async function getInvoiceFormData() {
   const shopId = await getShopId();
 
-  const [clients, shop] = await Promise.all([
-    db.client.findMany({
-      where: { shopId },
-      include: { vehicles: true },
-      orderBy: { lastName: "asc" },
-    }),
+  const [clients, shop, appointments] = await Promise.all([
+    db.client.findMany({ where: { shopId }, orderBy: { lastName: "asc" } }),
     db.shop.findUnique({ where: { id: shopId } }),
+    db.appointment.findMany({
+      where: { shopId, status: { in: ["CONFIRMED", "IN_PROGRESS", "COMPLETED"] } },
+      include: { client: true, service: true },
+      orderBy: { date: "desc" },
+      take: 20,
+    }),
   ]);
 
-  return { clients, shop };
+  return { clients, shop, appointments };
 }

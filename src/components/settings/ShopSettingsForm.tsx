@@ -76,14 +76,14 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
 
       {/* ── Logo ── */}
       <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h2 className="font-semibold text-slate-900 mb-4">Logo del taller</h2>
+        <h2 className="font-semibold text-slate-900 mb-4">Logo de la barbería</h2>
         <div className="flex items-center gap-5">
           {/* Preview */}
           <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden flex-shrink-0">
             {logoUrl ? (
               <Image
                 src={logoUrl}
-                alt="Logo del taller"
+                alt="Logo de la barbería"
                 width={96}
                 height={96}
                 className="object-contain"
@@ -126,12 +126,12 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
 
       {/* ── Datos del taller ── */}
       <form onSubmit={handleInfoSubmit} className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-        <h2 className="font-semibold text-slate-900">Datos del taller</h2>
+        <h2 className="font-semibold text-slate-900">Datos de la barbería</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Nombre del taller *
+              Nombre de la barbería *
             </label>
             <input
               name="name"
@@ -167,13 +167,13 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email del taller
+              Email de la barbería
             </label>
             <input
               name="email"
               type="email"
               defaultValue={shop.email ?? ""}
-              placeholder="garage@ejemplo.com"
+              placeholder="barberia@ejemplo.com"
               className={inputClass}
             />
           </div>

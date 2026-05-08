@@ -29,9 +29,7 @@ export async function GET(request: Request) {
       },
     },
     include: {
-      vehicle: {
-        include: { client: true },
-      },
+      client: true,
       shop: true,
     },
   });
@@ -39,7 +37,7 @@ export async function GET(request: Request) {
   const results = { sent: 0, skipped: 0, errors: 0 };
 
   for (const reminder of dueReminders) {
-    const client = reminder.vehicle.client;
+    const client = reminder.client;
 
     // Saltar si el cliente no tiene email
     if (!client.email) {
@@ -51,12 +49,8 @@ export async function GET(request: Request) {
       await sendReminderEmail({
         clientName: `${client.firstName} ${client.lastName}`,
         clientEmail: client.email,
-        vehicleDescription: `${reminder.vehicle.year} ${reminder.vehicle.make} ${reminder.vehicle.model}`,
-        licensePlate: reminder.vehicle.licensePlate,
         serviceType: reminder.serviceType,
         dueDate: reminder.dueDate,
-        dueMileage: reminder.dueMileage,
-        mileageUnit: reminder.vehicle.mileageUnit,
         shopName: reminder.shop.name,
         shopPhone: reminder.shop.phone,
         shopEmail: reminder.shop.email,

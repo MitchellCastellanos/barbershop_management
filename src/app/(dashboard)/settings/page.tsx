@@ -11,7 +11,7 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Configuración</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Logo, datos del taller y números de impuestos
+          Logo, datos de la barbería y números de impuestos
         </p>
       </div>
 

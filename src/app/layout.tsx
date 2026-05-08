@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mecanico Management",
-  description: "Sistema de gestión para taller mecánico",
+  title: "Barbershop Management",
+  description: "Sistema de gestión para barbería",
 };
 
 export default function RootLayout({

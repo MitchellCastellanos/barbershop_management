@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getClients } from "@/actions/clients";
 import { formatDate } from "@/lib/utils";
-import { Users, Plus, Search, Car, FileText } from "lucide-react";
+import { Users, Plus, Search, Calendar, FileText } from "lucide-react";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -51,7 +51,7 @@ export default async function ClientsPage({ searchParams }: Props) {
                   Contacto
                 </th>
                 <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">
-                  Vehículos
+                  Citas
                 </th>
                 <th className="text-center text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3 hidden md:table-cell">
                   Facturas
@@ -88,8 +88,8 @@ export default async function ClientsPage({ searchParams }: Props) {
                   </td>
                   <td className="px-5 py-4 text-center">
                     <div className="flex items-center justify-center gap-1 text-sm text-slate-600">
-                      <Car className="w-3.5 h-3.5 text-slate-400" />
-                      {client._count.vehicles}
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      {client._count.appointments}
                     </div>
                   </td>
                   <td className="px-5 py-4 text-center hidden md:table-cell">

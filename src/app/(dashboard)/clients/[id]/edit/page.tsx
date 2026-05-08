@@ -19,6 +19,7 @@ export default async function EditClientPage({ params }: Props) {
     phone: client.phone ?? "",
     address: client.address ?? "",
     notes: client.notes ?? "",
+    hairNotes: client.hairNotes ?? "",
   };
 
   return (
