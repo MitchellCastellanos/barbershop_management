@@ -10,63 +10,73 @@ export const clientSchema = z.object({
   phone: z.string().max(30).optional().or(z.literal("")),
   address: z.string().max(255).optional().or(z.literal("")),
   notes: z.string().max(1000).optional().or(z.literal("")),
+  hairNotes: z.string().max(1000).optional().or(z.literal("")),
 });
 export type ClientFormData = z.infer<typeof clientSchema>;
 
-export const vehicleSchema = z.object({
-  make: z.string().min(1, "La marca es requerida").max(50),
-  model: z.string().min(1, "El modelo es requerido").max(50),
-  year: z
-    .number()
-    .int()
-    .min(1900, "Año inválido")
-    .max(new Date().getFullYear() + 1, "Año inválido"),
-  licensePlate: z.string().min(1, "La placa es requerida").max(20),
-  vin: z.string().max(17).optional().or(z.literal("")),
-  color: z.string().max(30).optional().or(z.literal("")),
-  mileageUnit: z.enum(["KM", "MILES"]),
-});
-export type VehicleFormData = z.infer<typeof vehicleSchema>;
+// ── Catálogo de servicios ─────────────────────────────────
 
-// ── Factura ──────────────────────────────────────────────────
+export const serviceSchema = z.object({
+  name: z.string().min(1, "El nombre del servicio es requerido").max(100),
+  description: z.string().max(500).optional().or(z.literal("")),
+  durationMinutes: z.number().int().min(5, "Mínimo 5 minutos").max(480),
+  price: z.number().min(0, "El precio no puede ser negativo"),
+  isActive: z.boolean().default(true),
+});
+export type ServiceFormData = z.infer<typeof serviceSchema>;
+
+// ── Citas ─────────────────────────────────────────────────
+
+export const appointmentSchema = z.object({
+  clientId: z.string().min(1, "Selecciona un cliente"),
+  barberId: z.string().optional().or(z.literal("")),
+  serviceId: z.string().optional().or(z.literal("")),
+  date: z.string().min(1, "La fecha es requerida"), // ISO datetime string
+  durationMinutes: z.number().int().min(5).max(480).default(30),
+  status: z
+    .enum(["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+    .default("PENDING"),
+  notes: z.string().max(1000).optional().or(z.literal("")),
+  tip: z.number().min(0).optional().nullable(),
+});
+export type AppointmentFormData = z.infer<typeof appointmentSchema>;
+
+// ── Factura ──────────────────────────────────────────────
 
 export const lineItemSchema = z.object({
   description: z.string().min(1, "La descripción es requerida").max(255),
   quantity: z.number().positive("La cantidad debe ser mayor a 0"),
   unitPrice: z.number().min(0, "El precio no puede ser negativo"),
-  itemType: z.enum(["LABOUR", "PART", "OTHER"]),
+  itemType: z.enum(["CORTE", "PRODUCTO", "OTHER"]),
 });
 
 export type LineItemData = z.infer<typeof lineItemSchema>;
 
 export const invoiceSchema = z.object({
   clientId: z.string().min(1, "Selecciona un cliente"),
-  vehicleId: z.string().min(1, "Selecciona un vehículo"),
+  appointmentId: z.string().optional().or(z.literal("")),
   lineItems: z
     .array(lineItemSchema)
     .min(1, "Agrega al menos una línea de servicio"),
   taxRate: z.number().min(0).max(1), // 0.14975 = TPS+TVQ Quebec
   notes: z.string().max(1000).optional().or(z.literal("")),
-  mileageIn: z.number().int().min(0).optional().nullable(),
-  mileageOut: z.number().int().min(0).optional().nullable(),
   dueAt: z.string().optional().or(z.literal("")), // ISO date string
 });
 
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
-// ── Recordatorio de servicio ──────────────────────────────────
+// ── Recordatorio de cita ──────────────────────────────────
 
 export const reminderSchema = z.object({
-  vehicleId: z.string().min(1, "Selecciona un vehículo"),
+  clientId: z.string().min(1, "Selecciona un cliente"),
   serviceType: z.string().min(1, "El tipo de servicio es requerido").max(100),
   dueDate: z.string().optional().or(z.literal("")), // ISO date string
-  dueMileage: z.number().int().min(0).optional().nullable(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 
 export type ReminderFormData = z.infer<typeof reminderSchema>;
 
-// ── Documentos contables ──────────────────────────────────────
+// ── Documentos contables ──────────────────────────────────
 
 export const DOC_CATEGORIES = [
   { value: "INVOICES", label: "Facturas" },

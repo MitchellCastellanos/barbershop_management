@@ -11,7 +11,7 @@
 
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useState, useMemo } from "react";
+import { useTransition, useMemo } from "react";
 import { invoiceSchema, type InvoiceFormData } from "@/lib/validations";
 import { Plus, Trash2 } from "lucide-react";
 import Decimal from "decimal.js";
@@ -21,29 +21,38 @@ interface Client {
   id: string;
   firstName: string;
   lastName: string;
-  vehicles: { id: string; make: string; model: string; year: number; licensePlate: string }[];
+}
+
+interface Appointment {
+  id: string;
+  date: Date | string;
+  clientId: string;
+  client: { firstName: string; lastName: string };
+  service?: { name: string } | null;
 }
 
 interface InvoiceFormProps {
   clients: Client[];
+  appointments: Appointment[];
   onSubmit: (data: InvoiceFormData) => Promise<{ error?: Record<string, string[]> } | void>;
   defaultClientId?: string;
-  defaultVehicleId?: string;
+  defaultAppointmentId?: string;
 }
 
 const TAX_RATE = 0.14975; // TPS 5% + TVQ 9.975% = 14.975% (Quebec)
 
 const ITEM_TYPES = [
-  { value: "LABOUR", label: "Mano de obra" },
-  { value: "PART", label: "Repuesto" },
+  { value: "CORTE", label: "Corte/Servicio" },
+  { value: "PRODUCTO", label: "Producto" },
   { value: "OTHER", label: "Otro" },
 ];
 
 export function InvoiceForm({
   clients,
+  appointments,
   onSubmit,
   defaultClientId,
-  defaultVehicleId,
+  defaultAppointmentId,
 }: InvoiceFormProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -58,14 +67,12 @@ export function InvoiceForm({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       clientId: defaultClientId ?? "",
-      vehicleId: defaultVehicleId ?? "",
+      appointmentId: defaultAppointmentId ?? "",
       taxRate: TAX_RATE,
       notes: "",
-      mileageIn: undefined,
-      mileageOut: undefined,
       dueAt: "",
       lineItems: [
-        { description: "", quantity: 1, unitPrice: 0, itemType: "LABOUR" },
+        { description: "", quantity: 1, unitPrice: 0, itemType: "CORTE" },
       ],
     },
   });
@@ -81,9 +88,10 @@ export function InvoiceForm({
   const lineItems = useWatch({ control, name: "lineItems" });
   const taxRate = watch("taxRate");
 
-  // Filtrar vehículos según el cliente seleccionado
-  const selectedClient = clients.find((c) => c.id === selectedClientId);
-  const vehicles = selectedClient?.vehicles ?? [];
+  // Filtrar citas según el cliente seleccionado
+  const clientAppointments = appointments.filter(
+    (a) => !selectedClientId || a.clientId === selectedClientId
+  );
 
   // Calcular totales en tiempo real
   const { subtotal, taxAmount, total } = useMemo(() => {
@@ -114,9 +122,9 @@ export function InvoiceForm({
   return (
     <form onSubmit={handleSubmit(onValid)} className="space-y-6">
 
-      {/* ── Cliente y Vehículo ── */}
+      {/* ── Cliente y Cita ── */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-        <h2 className="font-semibold text-slate-900">Cliente y vehículo</h2>
+        <h2 className="font-semibold text-slate-900">Cliente y cita</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Cliente */}
           <div>
@@ -139,61 +147,41 @@ export function InvoiceForm({
             )}
           </div>
 
-          {/* Vehículo — solo aparece si hay un cliente seleccionado */}
+          {/* Cita — opcional, filtra por cliente */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Vehículo *
+              Cita (opcional)
             </label>
             <select
-              {...register("vehicleId")}
-              disabled={!selectedClientId || vehicles.length === 0}
-              className={selectClass(!!errors.vehicleId)}
+              {...register("appointmentId")}
+              disabled={clientAppointments.length === 0}
+              className={selectClass(false)}
             >
               <option value="">
-                {!selectedClientId
-                  ? "Selecciona un cliente primero"
-                  : vehicles.length === 0
-                  ? "Sin vehículos registrados"
-                  : "Seleccionar vehículo..."}
+                {clientAppointments.length === 0
+                  ? selectedClientId
+                    ? "Sin citas recientes"
+                    : "Selecciona un cliente primero"
+                  : "Seleccionar cita..."}
               </option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.year} {v.make} {v.model} — {v.licensePlate}
-                </option>
-              ))}
+              {clientAppointments.map((a) => {
+                const date = new Date(a.date);
+                const dateStr = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                const label = a.service?.name
+                  ? `${dateStr} — ${a.service.name}`
+                  : dateStr;
+                return (
+                  <option key={a.id} value={a.id}>
+                    {label}
+                  </option>
+                );
+              })}
             </select>
-            {errors.vehicleId && (
-              <p className="text-red-600 text-xs mt-1">{errors.vehicleId.message}</p>
-            )}
           </div>
         </div>
 
-        {/* Km entrada / salida */}
+        {/* Fecha de vencimiento */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Km entrada
-            </label>
-            <input
-              {...register("mileageIn", { valueAsNumber: true })}
-              type="number"
-              min={0}
-              placeholder="75,000"
-              className={inputClass(false)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Km salida
-            </label>
-            <input
-              {...register("mileageOut", { valueAsNumber: true })}
-              type="number"
-              min={0}
-              placeholder="75,050"
-              className={inputClass(false)}
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Fecha de vencimiento
@@ -210,7 +198,7 @@ export function InvoiceForm({
       {/* ── Líneas de servicio ── */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Servicios y repuestos</h2>
+          <h2 className="font-semibold text-slate-900">Servicios y productos</h2>
           {errors.lineItems?.root && (
             <p className="text-red-600 text-xs mt-1">{errors.lineItems.root.message}</p>
           )}
@@ -243,7 +231,7 @@ export function InvoiceForm({
                   <input
                     {...register(`lineItems.${index}.description`)}
                     type="text"
-                    placeholder="Ej: Cambio de aceite 5W-30"
+                    placeholder="Ej: Corte clásico con tijera"
                     className={inputClass(!!errors.lineItems?.[index]?.description)}
                   />
                   {errors.lineItems?.[index]?.description && (
@@ -340,7 +328,7 @@ export function InvoiceForm({
           <button
             type="button"
             onClick={() =>
-              append({ description: "", quantity: 1, unitPrice: 0, itemType: "LABOUR" })
+              append({ description: "", quantity: 1, unitPrice: 0, itemType: "CORTE" })
             }
             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
           >

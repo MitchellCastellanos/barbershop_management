@@ -1,4 +1,4 @@
-// Template de email para recordatorios de servicio
+// Template de email para recordatorios de servicio de barbería
 // Usa @react-email/components — se renderiza en el servidor con Resend.
 // NO es un componente del DOM — solo se usa en email.ts
 
@@ -10,7 +10,6 @@ import {
   Hr,
   Html,
   Preview,
-  Row,
   Section,
   Text,
 } from "@react-email/components";
@@ -18,12 +17,8 @@ import React from "react";
 
 interface ServiceReminderEmailProps {
   clientName: string;
-  vehicleDescription: string;
-  licensePlate: string;
   serviceType: string;
   dueDate?: Date | null;
-  dueMileage?: number | null;
-  mileageUnit: string;
   shopName: string;
   shopPhone?: string | null;
   shopEmail?: string | null;
@@ -31,17 +26,13 @@ interface ServiceReminderEmailProps {
 
 export function ServiceReminderEmail({
   clientName,
-  vehicleDescription,
-  licensePlate,
   serviceType,
   dueDate,
-  dueMileage,
-  mileageUnit,
   shopName,
   shopPhone,
   shopEmail,
 }: ServiceReminderEmailProps) {
-  const previewText = `Recordatorio: ${serviceType} para tu ${vehicleDescription}`;
+  const previewText = `Te esperamos para tu próximo corte en ${shopName}`;
 
   function fmtDate(d: Date): string {
     const months = [
@@ -60,14 +51,14 @@ export function ServiceReminderEmail({
           {/* Header */}
           <Section style={styles.header}>
             <Heading style={styles.shopName}>{shopName}</Heading>
-            <Text style={styles.headerSubtitle}>Recordatorio de servicio</Text>
+            <Text style={styles.headerSubtitle}>Recordatorio de cita</Text>
           </Section>
 
           {/* Greeting */}
           <Section style={styles.content}>
-            <Text style={styles.greeting}>Hola, {clientName} 👋</Text>
+            <Text style={styles.greeting}>Hola {clientName},</Text>
             <Text style={styles.body_text}>
-              Te recordamos que tu vehículo tiene un servicio próximo que requiere atención:
+              ha pasado un tiempo desde tu última visita. Te recordamos que es hora de renovar tu estilo. Aquí tienes los detalles:
             </Text>
 
             {/* Service card */}
@@ -75,37 +66,17 @@ export function ServiceReminderEmail({
               <Text style={styles.cardLabel}>TIPO DE SERVICIO</Text>
               <Text style={styles.cardValue}>{serviceType}</Text>
 
-              <Hr style={styles.cardDivider} />
-
-              <Row>
-                <Text style={styles.cardLabel}>VEHÍCULO</Text>
-                <Text style={styles.cardValue}>
-                  {vehicleDescription}
-                </Text>
-                <Text style={styles.cardMeta}>Placa: {licensePlate}</Text>
-              </Row>
-
               {dueDate && (
                 <>
                   <Hr style={styles.cardDivider} />
-                  <Text style={styles.cardLabel}>FECHA LÍMITE</Text>
+                  <Text style={styles.cardLabel}>FECHA SUGERIDA</Text>
                   <Text style={styles.cardValue}>{fmtDate(new Date(dueDate))}</Text>
-                </>
-              )}
-
-              {dueMileage && (
-                <>
-                  <Hr style={styles.cardDivider} />
-                  <Text style={styles.cardLabel}>KILOMETRAJE LÍMITE</Text>
-                  <Text style={styles.cardValue}>
-                    {dueMileage.toLocaleString()} {mileageUnit}
-                  </Text>
                 </>
               )}
             </Section>
 
             <Text style={styles.body_text}>
-              Para agendar tu cita o si tienes alguna pregunta, contáctanos:
+              Para agendar tu cita, contáctanos:
             </Text>
 
             {/* Contact */}
@@ -148,7 +119,7 @@ const styles = {
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#1d4ed8",
+    backgroundColor: "#92400e",
     padding: "32px 40px",
   },
   shopName: {
@@ -158,7 +129,7 @@ const styles = {
     margin: "0 0 4px 0",
   },
   headerSubtitle: {
-    color: "#bfdbfe",
+    color: "#fde68a",
     fontSize: "13px",
     margin: "0",
   },
@@ -169,7 +140,7 @@ const styles = {
     fontSize: "18px",
     fontWeight: "600",
     color: "#0f172a",
-    margin: "0 0 12px 0",
+    margin: "0 0 4px 0",
   },
   body_text: {
     fontSize: "14px",
@@ -197,24 +168,19 @@ const styles = {
     color: "#0f172a",
     margin: "0",
   },
-  cardMeta: {
-    fontSize: "12px",
-    color: "#64748b",
-    margin: "4px 0 0 0",
-  },
   cardDivider: {
     borderColor: "#e2e8f0",
     margin: "16px 0",
   },
   contact: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#fef3c7",
     borderRadius: "8px",
     padding: "16px 20px",
   },
   contactShop: {
     fontSize: "14px",
     fontWeight: "600",
-    color: "#1d4ed8",
+    color: "#92400e",
     margin: "0 0 6px 0",
   },
   contactDetail: {

@@ -10,7 +10,8 @@ import {
   Bell,
   FolderOpen,
   Settings,
-  Wrench,
+  Scissors,
+  Calendar,
 } from "lucide-react";
 
 const navItems = [
@@ -20,9 +21,19 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
+    label: "Citas",
+    href: "/appointments",
+    icon: Calendar,
+  },
+  {
     label: "Clientes",
     href: "/clients",
     icon: Users,
+  },
+  {
+    label: "Servicios",
+    href: "/services",
+    icon: Scissors,
   },
   {
     label: "Facturas",
@@ -55,11 +66,11 @@ export function Sidebar() {
       <div className="px-6 py-5 border-b border-slate-800">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Wrench className="w-4 h-4 text-white" />
+            <Scissors className="w-4 h-4 text-white" />
           </div>
           <div>
             <p className="text-white font-semibold text-sm leading-none">
-              Mecanico
+              Barbershop
             </p>
             <p className="text-slate-400 text-xs mt-0.5">Management</p>
           </div>

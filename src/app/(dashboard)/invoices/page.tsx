@@ -95,9 +95,9 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {/* Table header */}
-          <div className="hidden sm:grid grid-cols-[1fr_160px_120px_100px_110px] gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-medium text-slate-500 uppercase">
+          <div className="hidden sm:grid grid-cols-[1fr_180px_120px_100px_110px] gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-medium text-slate-500 uppercase">
             <span>Factura / Cliente</span>
-            <span>Vehículo</span>
+            <span>Servicio</span>
             <span>Fecha</span>
             <span>Estado</span>
             <span className="text-right">Total</span>
@@ -108,7 +108,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
               <Link
                 key={invoice.id}
                 href={`/invoices/${invoice.id}`}
-                className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_160px_120px_100px_110px] gap-4 px-5 py-4 items-center hover:bg-slate-50 transition-colors"
+                className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_180px_120px_100px_110px] gap-4 px-5 py-4 items-center hover:bg-slate-50 transition-colors"
               >
                 {/* Invoice # + Client */}
                 <div>
@@ -120,12 +120,15 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                   </p>
                 </div>
 
-                {/* Vehicle */}
+                {/* Appointment service */}
                 <div className="hidden sm:block">
-                  <p className="text-sm text-slate-700">
-                    {invoice.vehicle.year} {invoice.vehicle.make} {invoice.vehicle.model}
-                  </p>
-                  <p className="text-xs text-slate-400">{invoice.vehicle.licensePlate}</p>
+                  {invoice.appointment?.service ? (
+                    <p className="text-sm text-slate-700">
+                      {invoice.appointment.service.name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-slate-400">—</p>
+                  )}
                 </div>
 
                 {/* Date */}

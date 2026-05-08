@@ -12,6 +12,7 @@ import {
   Plus,
   ArrowUpRight,
   ArrowDownRight,
+  Calendar,
 } from "lucide-react";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { StatusPie } from "@/components/dashboard/StatusPie";
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
   const shopId = session?.user?.shopId;
 
   if (!shopId) {
-    return <div className="text-center py-20 text-slate-500">Configurando tu taller...</div>;
+    return <div className="text-center py-20 text-slate-500">Configurando tu barbería...</div>;
   }
 
   const now = new Date();
@@ -51,9 +52,12 @@ export default async function DashboardPage() {
   // 6 meses atrás (primer día)
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
   const [
     clientCount,
-    invoiceCount,
+    todayAppointments,
     pendingReminders,
     recentInvoices,
     thisMonthRevenue,
@@ -63,7 +67,7 @@ export default async function DashboardPage() {
     topClientsRaw,
   ] = await Promise.all([
     db.client.count({ where: { shopId } }),
-    db.invoice.count({ where: { shopId } }),
+    db.appointment.count({ where: { shopId, date: { gte: todayStart, lte: todayEnd } } }),
     db.serviceReminder.count({ where: { shopId, status: "PENDING" } }),
     db.invoice.findMany({
       where: { shopId },
@@ -157,12 +161,12 @@ export default async function DashboardPage() {
       href: "/clients",
     },
     {
-      label: "Facturas totales",
-      value: invoiceCount.toString(),
-      icon: FileText,
+      label: "Citas hoy",
+      value: todayAppointments.toString(),
+      icon: Calendar,
       color: "text-violet-600",
       bg: "bg-violet-50",
-      href: "/invoices",
+      href: "/appointments",
     },
     {
       label: "Ingresos este mes",
@@ -318,9 +322,9 @@ export default async function DashboardPage() {
           <div className="space-y-2">
             {[
               { href: "/clients/new", label: "Nuevo cliente", icon: Users, bg: "bg-blue-50", color: "text-blue-600" },
-              { href: "/invoices/new", label: "Nueva factura", icon: FileText, bg: "bg-violet-50", color: "text-violet-600" },
+              { href: "/appointments/new", label: "Nueva cita", icon: Calendar, bg: "bg-violet-50", color: "text-violet-600" },
+              { href: "/invoices/new", label: "Nueva factura", icon: FileText, bg: "bg-emerald-50", color: "text-emerald-600" },
               { href: "/reminders/new", label: "Nuevo recordatorio", icon: Bell, bg: "bg-amber-50", color: "text-amber-600" },
-              { href: "/accounting", label: "Subir documento", icon: Plus, bg: "bg-slate-100", color: "text-slate-600" },
             ].map(({ href, label, icon: Icon, bg, color }) => (
               <Link
                 key={href}

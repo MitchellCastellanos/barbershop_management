@@ -5,8 +5,7 @@ import Link from "next/link";
 import {
   ChevronLeft,
   Pencil,
-  Trash2,
-  Car,
+  Calendar,
   Plus,
   Phone,
   Mail,
@@ -18,6 +17,22 @@ import { DeleteButton } from "@/components/clients/DeleteButton";
 interface Props {
   params: Promise<{ id: string }>;
 }
+
+const APPT_STATUS_BADGE: Record<string, string> = {
+  PENDING: "bg-amber-100 text-amber-700",
+  CONFIRMED: "bg-blue-100 text-blue-700",
+  IN_PROGRESS: "bg-violet-100 text-violet-700",
+  COMPLETED: "bg-emerald-100 text-emerald-700",
+  CANCELLED: "bg-slate-100 text-slate-400",
+};
+
+const APPT_STATUS_LABEL: Record<string, string> = {
+  PENDING: "Pendiente",
+  CONFIRMED: "Confirmada",
+  IN_PROGRESS: "En progreso",
+  COMPLETED: "Completada",
+  CANCELLED: "Cancelada",
+};
 
 export default async function ClientDetailPage({ params }: Props) {
   const { id } = await params;
@@ -89,62 +104,71 @@ export default async function ClientDetailPage({ params }: Props) {
                 <p className="text-sm text-slate-600 whitespace-pre-wrap">{client.notes}</p>
               </div>
             )}
+            {client.hairNotes && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-xs font-medium text-slate-500 uppercase mb-1.5">Notas de cabello</p>
+                <p className="text-sm text-slate-600 whitespace-pre-wrap">{client.hairNotes}</p>
+              </div>
+            )}
           </div>
 
           {/* Stats rápidos */}
           <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Vehículos" value={client._count.vehicles} icon={<Car className="w-4 h-4 text-blue-600" />} />
+            <StatCard label="Citas" value={client._count.appointments} icon={<Calendar className="w-4 h-4 text-blue-600" />} />
             <StatCard label="Facturas" value={client._count.invoices} icon={<FileText className="w-4 h-4 text-violet-600" />} />
           </div>
         </div>
 
-        {/* Vehículos + Facturas recientes */}
+        {/* Citas recientes + Facturas recientes */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Vehículos */}
+          {/* Citas recientes */}
           <div className="bg-white rounded-xl border border-slate-200">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Car className="w-4 h-4 text-slate-400" />
-                <h2 className="font-semibold text-slate-900">Vehículos</h2>
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <h2 className="font-semibold text-slate-900">Citas recientes</h2>
               </div>
               <Link
-                href={`/clients/${id}/vehicles/new`}
+                href={`/appointments/new?clientId=${id}`}
                 className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Agregar
+                Nueva cita
               </Link>
             </div>
 
-            {client.vehicles.length === 0 ? (
+            {client.appointments.length === 0 ? (
               <div className="p-6 text-center">
-                <Car className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-400">Sin vehículos registrados</p>
+                <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">Sin citas registradas</p>
                 <Link
-                  href={`/clients/${id}/vehicles/new`}
+                  href={`/appointments/new?clientId=${id}`}
                   className="mt-2 inline-block text-sm text-blue-600 hover:underline"
                 >
-                  Agregar vehículo →
+                  Crear primera cita →
                 </Link>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {client.vehicles.map((vehicle) => (
+                {client.appointments.map((appt) => (
                   <Link
-                    key={vehicle.id}
-                    href={`/vehicles/${vehicle.id}`}
+                    key={appt.id}
+                    href={`/appointments/${appt.id}`}
                     className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
                   >
                     <div>
                       <p className="text-sm font-medium text-slate-900">
-                        {vehicle.year} {vehicle.make} {vehicle.model}
+                        {appt.service?.name ?? "Sin servicio"}{appt.barber ? ` · ${appt.barber.name}` : ""}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Placa: {vehicle.licensePlate}
-                        {vehicle.color ? ` · ${vehicle.color}` : ""}
+                        {formatDate(appt.date)}
                       </p>
                     </div>
-                    <ChevronLeft className="w-4 h-4 text-slate-400 rotate-180" />
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${APPT_STATUS_BADGE[appt.status] ?? "bg-slate-100 text-slate-500"}`}
+                    >
+                      {APPT_STATUS_LABEL[appt.status] ?? appt.status}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -175,14 +199,14 @@ export default async function ClientDetailPage({ params }: Props) {
                         {invoice.invoiceNumber}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {invoice.vehicle.make} {invoice.vehicle.model} · {formatDate(invoice.issuedAt)}
+                        {formatDate(invoice.issuedAt)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-slate-900">
                         {formatCurrency(Number(invoice.total))}
                       </p>
-                      <StatusBadge status={invoice.status} />
+                      <InvoiceStatusBadge status={invoice.status} />
                     </div>
                   </Link>
                 ))}
@@ -215,7 +239,7 @@ function StatCard({ label, value, icon }: { label: string; value: number; icon: 
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function InvoiceStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     DRAFT: "bg-slate-100 text-slate-600",
     SENT: "bg-blue-100 text-blue-700",
