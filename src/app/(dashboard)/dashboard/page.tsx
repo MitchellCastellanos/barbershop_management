@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
+import { startOfDay, endOfDay, startOfMonth, zonedParts } from "@/lib/timezone";
 import Link from "next/link";
 import {
   Users,
@@ -45,15 +46,15 @@ export default async function DashboardPage() {
   }
 
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const startOfThisMonth = startOfMonth(now);
+  const startOfLastMonth = startOfMonth(now, -1);
+  const endOfLastMonth = new Date(startOfThisMonth.getTime() - 1);
 
   // 6 meses atrás (primer día)
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const sixMonthsAgo = startOfMonth(now, -5);
 
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
 
   const [
     clientCount,
@@ -77,7 +78,7 @@ export default async function DashboardPage() {
     }),
     // Ingresos este mes
     db.invoice.aggregate({
-      where: { shopId, status: "PAID", paidAt: { gte: startOfMonth } },
+      where: { shopId, status: "PAID", paidAt: { gte: startOfThisMonth } },
       _sum: { total: true },
     }),
     // Ingresos mes pasado (para % de cambio)
@@ -110,13 +111,13 @@ export default async function DashboardPage() {
 
   // Revenue por mes (últimos 6 meses)
   const revenueByMonth = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-    return { year: d.getFullYear(), month: d.getMonth(), label: MONTH_NAMES[d.getMonth()] };
+    const p = zonedParts(startOfMonth(now, -(5 - i)));
+    return { year: p.year, month: p.month - 1, label: MONTH_NAMES[p.month - 1] };
   }).map(({ year, month, label }) => {
     const revenue = paidInvoicesLast6Months
       .filter((inv) => {
-        const paid = inv.paidAt!;
-        return paid.getFullYear() === year && paid.getMonth() === month;
+        const paid = zonedParts(inv.paidAt!);
+        return paid.year === year && paid.month - 1 === month;
       })
       .reduce((sum, inv) => sum + Number(inv.total), 0);
     return { month: label, revenue: Math.round(revenue * 100) / 100 };

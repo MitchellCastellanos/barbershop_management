@@ -21,6 +21,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
+import { zonedParts } from "@/lib/timezone";
 // Tipos para los datos que recibe el PDF
 interface LineItem {
   description: string;
@@ -142,9 +143,9 @@ function fmtCurrency(val: string | number): string {
 }
 
 function fmtDate(d: Date | string): string {
-  const date = new Date(d);
+  const date = zonedParts(new Date(d));
   const months = ["Jan", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  return `${date.day} ${months[date.month - 1]} ${date.year}`;
 }
 
 function fmtQty(val: string | number): string {

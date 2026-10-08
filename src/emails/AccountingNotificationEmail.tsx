@@ -14,6 +14,7 @@ import {
   Text,
 } from "@react-email/components";
 
+import { zonedParts } from "@/lib/timezone";
 interface UploadedFile {
   fileName: string;
   category: string;
@@ -37,12 +38,12 @@ export function AccountingNotificationEmail({
   const previewText = `${shopName} subió ${fileCount} documento${fileCount !== 1 ? "s" : ""} contable${fileCount !== 1 ? "s" : ""}`;
 
   function fmtDate(): string {
-    const now = new Date();
+    const now = zonedParts(new Date());
     const months = [
       "enero", "febrero", "marzo", "abril", "mayo", "junio",
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     ];
-    return `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+    return `${now.day} de ${months[now.month - 1]} de ${now.year}`;
   }
 
   return (

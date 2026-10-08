@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { APP_TIMEZONE } from "@/lib/timezone";
 
 // Utility usada por shadcn/ui: combina clases Tailwind sin conflictos
 export function cn(...inputs: ClassValue[]) {
@@ -21,6 +22,7 @@ export function formatDate(date: Date | string): string {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: APP_TIMEZONE,
   }).format(new Date(date));
 }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { parseLocalDateTime } from "@/lib/timezone";
 import { reminderSchema, type ReminderFormData } from "@/lib/validations";
 import { sendReminderEmail } from "@/lib/email";
 
@@ -48,7 +49,7 @@ export async function createReminder(formData: ReminderFormData) {
       shopId,
       clientId,
       serviceType,
-      dueDate: dueDate ? new Date(dueDate) : null,
+      dueDate: dueDate ? parseLocalDateTime(dueDate) : null,
       notes: notes || null,
       status: "PENDING",
     },

@@ -15,6 +15,7 @@ import {
 } from "@react-email/components";
 import React from "react";
 
+import { zonedParts } from "@/lib/timezone";
 interface ServiceReminderEmailProps {
   clientName: string;
   serviceType: string;
@@ -34,12 +35,13 @@ export function ServiceReminderEmail({
 }: ServiceReminderEmailProps) {
   const previewText = `Te esperamos para tu próximo corte en ${shopName}`;
 
-  function fmtDate(d: Date): string {
+  function fmtDate(date: Date): string {
+    const d = zonedParts(date);
     const months = [
       "enero", "febrero", "marzo", "abril", "mayo", "junio",
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     ];
-    return `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`;
+    return `${d.day} de ${months[d.month - 1]} de ${d.year}`;
   }
 
   return (

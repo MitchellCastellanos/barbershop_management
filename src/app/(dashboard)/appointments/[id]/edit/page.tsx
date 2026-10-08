@@ -1,6 +1,7 @@
 import { getAppointmentById, updateAppointment, getAppointmentFormData } from "@/actions/appointments";
 import { AppointmentForm } from "@/components/appointments/AppointmentForm";
 import Link from "next/link";
+import { toLocalInputValue } from "@/lib/timezone";
 import { ChevronLeft } from "lucide-react";
 
 interface Props {
@@ -44,7 +45,7 @@ export default async function EditAppointmentPage({ params }: Props) {
             clientId: appointment.clientId,
             barberId: appointment.barberId ?? "",
             serviceId: appointment.serviceId ?? "",
-            date: appointment.date.toISOString().slice(0, 16),
+            date: toLocalInputValue(appointment.date),
             durationMinutes: appointment.durationMinutes,
             status: appointment.status,
             notes: appointment.notes ?? "",

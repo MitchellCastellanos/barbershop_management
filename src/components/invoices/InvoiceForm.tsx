@@ -10,6 +10,7 @@
 //   pero se RE-CALCULAN en el servidor (Server Action) para seguridad.
 
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { zonedParts } from "@/lib/timezone";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition, useMemo } from "react";
 import { invoiceSchema, type InvoiceFormData } from "@/lib/validations";
@@ -165,8 +166,8 @@ export function InvoiceForm({
                   : "Seleccionar cita..."}
               </option>
               {clientAppointments.map((a) => {
-                const date = new Date(a.date);
-                const dateStr = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                const date = zonedParts(new Date(a.date));
+                const dateStr = `${date.day}/${date.month}/${date.year}`;
                 const label = a.service?.name
                   ? `${dateStr} — ${a.service.name}`
                   : dateStr;

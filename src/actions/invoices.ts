@@ -10,6 +10,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { parseLocalDateTime } from "@/lib/timezone";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { invoiceSchema, type InvoiceFormData } from "@/lib/validations";
@@ -98,7 +99,7 @@ export async function createInvoice(formData: InvoiceFormData) {
         taxAmount: taxAmount.toFixed(2),
         total: total.toFixed(2),
         notes: notes || null,
-        dueAt: dueAt ? new Date(dueAt) : null,
+        dueAt: dueAt ? parseLocalDateTime(dueAt) : null,
         lineItems: {
           create: lineItems.map((item, index) => ({
             description: item.description,

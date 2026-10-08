@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { parseLocalDateTime } from "@/lib/timezone";
 import { appointmentSchema, type AppointmentFormData } from "@/lib/validations";
 
 async function getShopId(): Promise<string> {
@@ -75,7 +76,7 @@ export async function createAppointment(formData: AppointmentFormData) {
       clientId,
       barberId: barberId || null,
       serviceId: serviceId || null,
-      date: new Date(date),
+      date: parseLocalDateTime(date),
       durationMinutes,
       status,
       notes: notes || null,
@@ -117,7 +118,7 @@ export async function updateAppointment(
       clientId,
       barberId: barberId || null,
       serviceId: serviceId || null,
-      date: new Date(date),
+      date: parseLocalDateTime(date),
       durationMinutes,
       status,
       notes: notes || null,
